@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Room{
+  id String @id @default(cuid())
+  name String @unique
+  createdAt DateTime @defaut(now())
+  updatedAt DateTime @updatesAt
+  drawing Drawing[]
+
+  @@map("rooms")
+}
+
+model Drawing {
+  id String @id @default(cuid())
+  roomId String
+  x Float
+  y Float
+  prevX Float 
+  prevY Float
+  color String
+  lineWidth Int
+  timestamp DateTime @defaut(now())
+  room Room @relation(fields: [roomId], references:[id], onDelete:CasCade)
+
+  @@map("drawings")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  createdAt DateTime @default(now())
+  
+  @@map("users")
+}
