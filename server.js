@@ -26,12 +26,8 @@ app.prepare().then(() => {
     socket.on('join-room', async (roomName) => {
       socket.join(roomName)
       
-      await prisma.room.upsert({
-        where: { name: roomName },
-        update: {},
-        create: { name: roomName }
-      })
-
+      // Only load existing drawings, don't create room here
+      // Rooms must be created through the API with password
       const room = await prisma.room.findUnique({
         where: { name: roomName },
         include: { drawings: true }
