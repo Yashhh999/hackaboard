@@ -216,8 +216,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Set canvas background to match the CSS styling
-    ctx.fillStyle = theme === 'dark' ? '#1f2937' : '#ffffff'
+    ctx.fillStyle = theme === 'dark' ? '#000000' : '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
     console.log('Canvas initialized with theme:', theme, 'background:', ctx.fillStyle) // Debug log
@@ -263,7 +262,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
       prevY: lastPos.y,
       x: currentPos.x,
       y: currentPos.y,
-      color: tool === 'eraser' ? (theme === 'dark' ? '#1f2937' : '#ffffff') : color,
+      color: tool === 'eraser' ? (theme === 'dark' ? '#000000' : '#ffffff') : color,
       lineWidth: tool === 'eraser' ? lineWidth * 2 : lineWidth,
       room
     }
@@ -608,7 +607,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
               tool === 'eraser' ? 'cursor-not-allowed' : 'cursor-crosshair'
             }`}
             style={{ 
-              backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+              backgroundColor: theme === 'dark' ? '#000000' : '#ffffff',
               touchAction: 'none'
             }}
           />
