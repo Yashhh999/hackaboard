@@ -1,6 +1,7 @@
 "use client"
 import { useState, useContext, createContext } from 'react';
 import { Sun, Moon, MoreVertical, Palette, Settings, Info } from 'lucide-react';
+import Image from 'next/image';
 
 export const ThemeContext = createContext({
   theme: 'light',
@@ -19,12 +20,12 @@ export default function SideNav() {
           : 'bg-white/80 border-b border-gray-200'
       }`}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
             theme === 'dark' 
               ? 'bg-gradient-to-br from-indigo-500 to-purple-600' 
               : 'bg-gradient-to-br from-indigo-500 to-purple-600'
           }`}>
-            <Palette className="w-6 h-6 text-white" />
+              <Image src="/hackaboard.jpg" className="w-10 h-10 rounded-full object-cover" alt="hackaboard" width={128} height={128} />
           </div>
           <h1 className={`text-xl font-bold ${
             theme === 'dark' ? 'text-white' : 'text-gray-800'

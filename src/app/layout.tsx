@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "Hackaboard - Collaborative Whiteboard",
   description: "Real-time collaborative whiteboard with secure rooms and persistent storage",
   keywords: ["whiteboard", "collaboration", "drawing", "real-time", "canvas"],
+  icons: {
+    icon: '/hackaboard.jpg',
+    shortcut: '/hackaboard.jpg',
+    apple: '/hackaboard.jpg',
+  },
 };
 
 export default function RootLayout({

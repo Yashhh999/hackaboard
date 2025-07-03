@@ -6,7 +6,7 @@ import { useRooms } from '@/hooks/useRooms'
 import { ThemeContext } from '@/components/SideNav'
 import { useToast } from '@/components/Toast'
 import { Plus, Users, Trash2, Lock, LogIn, X, Palette, Zap, ArrowRight } from 'lucide-react'
-
+import Image from 'next/image'
 export default function Page() {
   const [room, setRoom] = useState('')
   const [password, setPassword] = useState('')
@@ -98,12 +98,12 @@ export default function Page() {
           : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
       }`}>
         <div className="text-center">
-          <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+          <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center overflow-hidden ${
             theme === 'dark' 
               ? 'bg-gradient-to-br from-indigo-500 to-purple-600' 
               : 'bg-gradient-to-br from-indigo-500 to-purple-600'
           } animate-pulse`}>
-            <Palette className="w-8 h-8 text-white" />
+            <Image src="/hackaboard.jpg" className="w-full h-full object-cover" alt="hackaboard" width={64} height={64} />
           </div>
           <div className={`text-xl font-semibold mb-2 ${
             theme === 'dark' ? 'text-white' : 'text-gray-800'
@@ -144,7 +144,7 @@ export default function Page() {
                 ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20' 
                 : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/30'
             }`}>
-              <Palette className="w-10 h-10 text-white" />
+              <Image src="/hackaboard.jpg" className="w-20 h-20 rounded-full object-cover" alt="hackaboard" width={128} height={128} />
             </div>
             <h1 className={`text-4xl font-bold mb-3 bg-gradient-to-r ${
               theme === 'dark' 

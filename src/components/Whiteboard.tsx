@@ -112,14 +112,14 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     setSocket(newSocket)
 
     newSocket.emit('join-room', room)
-    console.log('🔗 Joining room:', room) // Debug log
+    console.log('🔗 Joining room:', room) 
 
     newSocket.on('draw', (data: DrawData) => {
       drawLine(data.prevX, data.prevY, data.x, data.y, data.color, data.lineWidth)
     })
 
     newSocket.on('load-drawings', (drawings: DatabaseDrawing[]) => {
-      console.log('Loading drawings:', drawings.length, 'strokes') // Debug log
+      console.log('Loading drawings:', drawings.length, 'strokes') 
       
       if (!drawings || drawings.length === 0) {
         console.log('No drawings to load, just initializing canvas')
@@ -127,13 +127,10 @@ export default function Whiteboard({ room }: WhiteboardProps) {
         return
       }
       
-      // Initialize canvas with proper background first
       initializeCanvas()
       
-      // Add a small delay to ensure canvas is ready
       setTimeout(() => {
         try {
-          // Draw all existing drawings
           drawings.forEach((drawing, index) => {
             console.log(`Drawing stroke ${index + 1}:`, {
               from: { x: drawing.prevX, y: drawing.prevY },
@@ -147,7 +144,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
         } catch (error) {
           console.error('❌ Error loading drawings:', error)
         }
-      }, 150) // Increased delay slightly
+      }, 150) 
     })
 
     newSocket.on('clear-canvas', () => {
@@ -157,7 +154,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     return () => {
       newSocket.disconnect()
     }
-  }, [room, theme]) // Added theme dependency to reinitialize when theme changes
+  }, [room, theme])
 
   useEffect(() => {
     const handleResize = () => {
@@ -168,14 +165,12 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Initialize canvas when component mounts or theme changes
   useEffect(() => {
     if (canvasRef.current) {
       initializeCanvas()
     }
   }, [theme])
 
-  // Initialize canvas when canvas ref is set
   const handleCanvasRef = (canvas: HTMLCanvasElement | null) => {
     if (canvas) {
       initializeCanvas()
@@ -219,7 +214,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     ctx.fillStyle = theme === 'dark' ? '#000000' : '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
-    console.log('Canvas initialized with theme:', theme, 'background:', ctx.fillStyle) // Debug log
+    console.log('Canvas initialized with theme:', theme, 'background:', ctx.fillStyle) 
   }
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
