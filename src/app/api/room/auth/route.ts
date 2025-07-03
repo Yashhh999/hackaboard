@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { JoinRoomRequest, AuthResponse } from "@/types";
 import bcrypt from 'bcryptjs';
 
-// POST - Authenticate room password
 export async function POST(request: NextRequest) {
   try {
     const body: JoinRoomRequest = await request.json();
@@ -25,7 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response, { status: 400 });
     }
 
-    // Find room
     const room = await prisma.room.findUnique({
       where: { name: name.trim() }
     });
@@ -38,7 +36,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response, { status: 404 });
     }
 
-    // Verify password
     const passwordMatch = await bcrypt.compare(password, room.password);
 
     if (!passwordMatch) {

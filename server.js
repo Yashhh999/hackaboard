@@ -25,38 +25,51 @@ app.prepare().then(() => {
 
     socket.on('join-room', async (roomName) => {
       socket.join(roomName)
+      console.log(`🔗 User ${socket.id} joined room ${roomName}`)
       
-      // Only load existing drawings, don't create room here
-      // Rooms must be created through the API with password
-      const room = await prisma.room.findUnique({
-        where: { name: roomName },
-        include: { drawings: true }
-      })
+      try {
+        const room = await prisma.room.findUnique({
+          where: { name: roomName },
+          include: { drawings: true }
+        })
 
-      if (room) {
-        socket.emit('load-drawings', room.drawings)
+        if (room) {
+          console.log(`📊 Room ${roomName} has ${room.drawings.length} drawings`)
+          socket.emit('load-drawings', room.drawings)
+        } else {
+          console.log(`⚠️  Room ${roomName} not found in database`)
+          socket.emit('load-drawings', [])
+        }
+      } catch (error) {
+        console.error('❌ Error loading room drawings:', error)
+        socket.emit('load-drawings', [])
       }
-
-      console.log(`User ${socket.id} joined room ${roomName}`)
     })
 
     socket.on('draw', async (data) => {
-      const room = await prisma.room.findUnique({
-        where: { name: data.room }
-      })
-
-      if (room) {
-        await prisma.drawing.create({
-          data: {
-            roomId: room.id,
-            x: data.x,
-            y: data.y,
-            prevX: data.prevX,
-            prevY: data.prevY,
-            color: data.color,
-            lineWidth: data.lineWidth
-          }
+      try {
+        const room = await prisma.room.findUnique({
+          where: { name: data.room }
         })
+
+        if (room) {
+          const drawing = await prisma.drawing.create({
+            data: {
+              roomId: room.id,
+              x: data.x,
+              y: data.y,
+              prevX: data.prevX,
+              prevY: data.prevY,
+              color: data.color,
+              lineWidth: data.lineWidth
+            }
+          })
+          console.log(`✏️  Saved drawing stroke for room ${data.room}`)
+        } else {
+          console.log(`⚠️  Room ${data.room} not found when saving drawing`)
+        }
+      } catch (error) {
+        console.error('❌ Error saving drawing:', error)
       }
 
       socket.to(data.room).emit('draw', data)

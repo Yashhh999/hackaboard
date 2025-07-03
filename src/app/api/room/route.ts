@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { CreateRoomRequest, RoomResponse, JoinRoomRequest } from "@/types";
 import bcrypt from 'bcryptjs';
 
-// GET - Fetch all rooms or specific room
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -11,7 +10,6 @@ export async function GET(request: NextRequest) {
     const roomId = searchParams.get('id');
 
     if (roomName) {
-      // Get specific room by name
       const room = await prisma.room.findUnique({
         where: { name: roomName },
         include: {
@@ -37,7 +35,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (roomId) {
-      // Get specific room by ID
       const room = await prisma.room.findUnique({
         where: { id: roomId },
         include: {
@@ -62,7 +59,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response);
     }
 
-    // Get all rooms (without passwords)
     const rooms = await prisma.room.findMany({
       select: {
         id: true,
@@ -92,7 +88,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new room
 export async function POST(request: NextRequest) {
   try {
     const body: CreateRoomRequest = await request.json();
@@ -114,7 +109,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response, { status: 400 });
     }
 
-    // Check if room already exists
     const existingRoom = await prisma.room.findUnique({
       where: { name: name.trim() }
     });
@@ -127,10 +121,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response, { status: 409 });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+   const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new room
     const room = await prisma.room.create({
       data: {
         name: name.trim(),
@@ -164,14 +156,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Delete room and all its drawings (requires password)
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const roomName = searchParams.get('name');
     const roomId = searchParams.get('id');
     
-    // Get password from request body
     const body = await request.json();
     const { password } = body;
 
@@ -193,7 +183,6 @@ export async function DELETE(request: NextRequest) {
 
     const whereClause = roomName ? { name: roomName } : { id: roomId };
 
-    // Check if room exists and get password
     const room = await prisma.room.findUnique({
       where: whereClause
     });
@@ -206,7 +195,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(response, { status: 404 });
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, room.password);
     if (!isPasswordValid) {
       const response: RoomResponse = {
@@ -216,7 +204,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(response, { status: 401 });
     }
 
-    // Delete room (drawings will be deleted automatically due to cascade)
     await prisma.room.delete({
       where: whereClause
     });

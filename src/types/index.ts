@@ -1,7 +1,7 @@
 export interface Room {
   id: string
   name: string
-  password?: string // Don't expose password in responses
+  password?: string 
   createdAt: Date
   updatedAt: Date
   _count?: {

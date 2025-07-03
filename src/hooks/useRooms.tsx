@@ -40,7 +40,7 @@ export const useRooms = () => {
       const data: RoomResponse = await response.json();
       
       if (data.success && data.room) {
-        await fetchRooms(); // Refresh the list
+        await fetchRooms(); 
         return data.room;
       } else {
         setError(data.message || 'Failed to create room');
@@ -97,7 +97,7 @@ export const useRooms = () => {
       const data: RoomResponse = await response.json();
       
       if (data.success) {
-        await fetchRooms(); // Refresh the list
+        await fetchRooms(); 
         return true;
       } else {
         setError(data.message || 'Failed to delete room');
