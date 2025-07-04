@@ -19,6 +19,7 @@ interface DrawData {
   lineWidth: number
   room: string
   timestamp?: string
+  isEraser?: boolean
 }
 
 interface DatabaseDrawing {
@@ -31,6 +32,7 @@ interface DatabaseDrawing {
   color: string
   lineWidth: number
   timestamp: string
+  isEraser?: boolean
 }
 
 interface WhiteboardProps {
@@ -115,7 +117,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     console.log('🔗 Joining room:', room) 
 
     newSocket.on('draw', (data: DrawData) => {
-      drawLine(data.prevX, data.prevY, data.x, data.y, data.color, data.lineWidth)
+      drawLine(data.prevX, data.prevY, data.x, data.y, data.color, data.lineWidth, data.isEraser || false)
     })
 
     newSocket.on('load-drawings', (drawings: DatabaseDrawing[]) => {
@@ -136,9 +138,10 @@ export default function Whiteboard({ room }: WhiteboardProps) {
               from: { x: drawing.prevX, y: drawing.prevY },
               to: { x: drawing.x, y: drawing.y },
               color: drawing.color,
-              lineWidth: drawing.lineWidth
+              lineWidth: drawing.lineWidth,
+              isEraser: drawing.isEraser
             })
-            drawLine(drawing.prevX, drawing.prevY, drawing.x, drawing.y, drawing.color, drawing.lineWidth)
+            drawLine(drawing.prevX, drawing.prevY, drawing.x, drawing.y, drawing.color, drawing.lineWidth, drawing.isEraser || false)
           })
           console.log('✅ Successfully loaded and drew', drawings.length, 'strokes')
         } catch (error) {
@@ -177,7 +180,7 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     }
   }
 
-  const drawLine = (prevX: number, prevY: number, x: number, y: number, strokeColor: string, strokeWidth: number) => {
+  const drawLine = (prevX: number, prevY: number, x: number, y: number, strokeColor: string, strokeWidth: number, isEraser: boolean = false) => {
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -187,10 +190,20 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     ctx.beginPath()
     ctx.moveTo(prevX, prevY)
     ctx.lineTo(x, y)
-    ctx.strokeStyle = strokeColor
+    
+    if (isEraser) {
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.strokeStyle = 'rgba(0,0,0,1)' 
+    } else {
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.strokeStyle = strokeColor
+    }
+    
     ctx.lineWidth = strokeWidth
     ctx.lineCap = 'round'
     ctx.stroke()
+    
+    ctx.globalCompositeOperation = 'source-over'
   }
 
   const clearCanvas = () => {
@@ -257,12 +270,13 @@ export default function Whiteboard({ room }: WhiteboardProps) {
       prevY: lastPos.y,
       x: currentPos.x,
       y: currentPos.y,
-      color: tool === 'eraser' ? (theme === 'dark' ? '#000000' : '#ffffff') : color,
+      color: tool === 'eraser' ? '#000000' : color,
       lineWidth: tool === 'eraser' ? lineWidth * 2 : lineWidth,
-      room
+      room,
+      isEraser: tool === 'eraser'
     }
 
-    drawLine(lastPos.x, lastPos.y, currentPos.x, currentPos.y, drawData.color, drawData.lineWidth)
+    drawLine(lastPos.x, lastPos.y, currentPos.x, currentPos.y, drawData.color, drawData.lineWidth, drawData.isEraser)
     socket.emit('draw', drawData)
     setLastPos(currentPos)
   }
@@ -288,12 +302,13 @@ export default function Whiteboard({ room }: WhiteboardProps) {
       prevY: lastPos.y,
       x: currentPos.x,
       y: currentPos.y,
-      color: tool === 'eraser' ? (theme === 'dark' ? '#1f2937' : '#ffffff') : color,
+      color: tool === 'eraser' ? '#000000' : color, 
       lineWidth: tool === 'eraser' ? lineWidth * 2 : lineWidth,
-      room
+      room,
+      isEraser: tool === 'eraser'
     }
 
-    drawLine(lastPos.x, lastPos.y, currentPos.x, currentPos.y, drawData.color, drawData.lineWidth)
+    drawLine(lastPos.x, lastPos.y, currentPos.x, currentPos.y, drawData.color, drawData.lineWidth, drawData.isEraser)
     socket.emit('draw', drawData)
     setLastPos(currentPos)
   }

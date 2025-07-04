@@ -61,10 +61,11 @@ app.prepare().then(() => {
               prevX: data.prevX,
               prevY: data.prevY,
               color: data.color,
-              lineWidth: data.lineWidth
+              lineWidth: data.lineWidth,
+              isEraser: data.isEraser || false
             }
           })
-          console.log(`✏️  Saved drawing stroke for room ${data.room}`)
+          console.log(`✏️  Saved ${data.isEraser ? 'eraser' : 'drawing'} stroke for room ${data.room}`)
         } else {
           console.log(`⚠️  Room ${data.room} not found when saving drawing`)
         }

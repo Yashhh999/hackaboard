@@ -181,7 +181,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(response, { status: 400 });
     }
 
-    const whereClause = roomName ? { name: roomName } : { id: roomId };
+    const whereClause = roomName ? { name: roomName } : { id: roomId! };
 
     const room = await prisma.room.findUnique({
       where: whereClause

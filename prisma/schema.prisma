@@ -27,6 +27,7 @@ model Drawing {
   prevY     Float
   color     String
   lineWidth Int
+  isEraser  Boolean  @default(false)
   timestamp DateTime @default(now())
   
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
