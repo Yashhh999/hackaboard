@@ -2,11 +2,12 @@
 
 import { useContext, useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { useRouter } from 'next/navigation'
 import { ThemeContext } from './SideNav'
 import { 
   Palette, Eraser, RotateCcw, Download, Minus, Plus, 
   Circle, Pipette, Move, Pen, Maximize2, Minimize2,
-  Undo, Redo, Settings, Save, Share2, X
+  Undo, Redo, Settings, Save, Share2, X, LogOut
 } from 'lucide-react'
 
 interface DrawData {
@@ -41,6 +42,7 @@ interface WhiteboardProps {
 
 export default function Whiteboard({ room }: WhiteboardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const router = useRouter()
   const [socket, setSocket] = useState<Socket | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [color, setColor] = useState('#6366f1')
@@ -113,11 +115,16 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     const newSocket = io()
     setSocket(newSocket)
 
-    newSocket.emit('join-room', room)
-    console.log('🔗 Joining room:', room) 
+    const authToken = `hackmate_auth_${room}`
+    newSocket.emit('join-room', { roomName: room, authToken })
+    console.log('🔗 Joining room:', room, 'with auth token') 
 
     newSocket.on('draw', (data: DrawData) => {
       drawLine(data.prevX, data.prevY, data.x, data.y, data.color, data.lineWidth, data.isEraser || false)
+    })
+
+    newSocket.on('error', (error: string) => {
+      console.error('Socket error:', error)
     })
 
     newSocket.on('load-drawings', (drawings: DatabaseDrawing[]) => {
@@ -215,6 +222,16 @@ export default function Whiteboard({ room }: WhiteboardProps) {
 
     ctx.fillStyle = theme === 'dark' ? '#000000' : '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+  }
+
+  const leaveRoom = () => {
+    if (socket) {
+      socket.disconnect()
+    }
+    
+    sessionStorage.removeItem(`hackmate_auth_${room}`)
+    
+    router.push('/')
   }
 
   const initializeCanvas = () => {
@@ -700,15 +717,28 @@ export default function Whiteboard({ room }: WhiteboardProps) {
           </div>
           
 
-          <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-            theme === 'dark' 
-              ? 'bg-gray-900/80 text-gray-300 border border-gray-700' 
-              : 'bg-white/80 text-gray-600 border border-gray-200'
-          } backdrop-blur-md`}>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="hidden sm:inline">Room: </span>{room}
+          <div className={`absolute top-4 right-4 flex items-center gap-2`}>
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              theme === 'dark' 
+                ? 'bg-gray-900/80 text-gray-300 border border-gray-700' 
+                : 'bg-white/80 text-gray-600 border border-gray-200'
+            } backdrop-blur-md`}>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="hidden sm:inline">Room: </span>{room}
+              </div>
             </div>
+            <button
+              onClick={leaveRoom}
+              className={`p-2 rounded-full transition-all duration-200 hover:scale-105 ${
+                theme === 'dark' 
+                  ? 'bg-red-900/80 hover:bg-red-800 text-red-300 border border-red-700' 
+                  : 'bg-red-50/80 hover:bg-red-100 text-red-600 border border-red-200'
+              } backdrop-blur-md`}
+              title="Leave Room"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

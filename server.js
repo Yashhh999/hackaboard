@@ -5,6 +5,11 @@ const { Server } = require('socket.io')
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
+
+function validateAuthToken(roomName, providedToken) {
+  const expectedToken = `hackmate_auth_${roomName}`
+  return providedToken === expectedToken
+}
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
 const port = 3000
@@ -22,9 +27,24 @@ app.prepare().then(() => {
 
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id)
+    
+    socket.authenticatedRooms = new Set()
 
-    socket.on('join-room', async (roomName) => {
+    socket.on('join-room', async (data) => {
+      const { roomName, authToken } = data
+      
+      if (!roomName || !authToken) {
+        socket.emit('error', 'Room name and authentication token required')
+        return
+      }
+      
+      if (!validateAuthToken(roomName, authToken)) {
+        socket.emit('error', 'Invalid authentication token')
+        return
+      }
+      
       socket.join(roomName)
+      socket.authenticatedRooms.add(roomName)
       console.log(`🔗 User ${socket.id} joined room ${roomName}`)
       
       try {
@@ -47,6 +67,11 @@ app.prepare().then(() => {
     })
 
     socket.on('draw', async (data) => {
+      if (!socket.authenticatedRooms.has(data.room)) {
+        socket.emit('error', 'Not authenticated for this room')
+        return
+      }
+      
       try {
         const room = await prisma.room.findUnique({
           where: { name: data.room }
@@ -77,6 +102,11 @@ app.prepare().then(() => {
     })
 
     socket.on('clear-canvas', async (roomName) => {
+      if (!socket.authenticatedRooms.has(roomName)) {
+        socket.emit('error', 'Not authenticated for this room')
+        return
+      }
+      
       const room = await prisma.room.findUnique({
         where: { name: roomName }
       })

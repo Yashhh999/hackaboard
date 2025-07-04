@@ -8,8 +8,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const roomName = searchParams.get('name');
     const roomId = searchParams.get('id');
+    const authToken = searchParams.get('authToken');
 
     if (roomName) {
+      const expectedToken = `hackmate_auth_${roomName}`;
+      if (authToken !== expectedToken) {
+        const response: RoomResponse = {
+          success: false,
+          message: "Authentication required"
+        };
+        return NextResponse.json(response, { status: 401 });
+      }
+
       const room = await prisma.room.findUnique({
         where: { name: roomName },
         include: {
@@ -35,28 +45,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (roomId) {
-      const room = await prisma.room.findUnique({
-        where: { id: roomId },
-        include: {
-          _count: {
-            select: { drawings: true }
-          }
-        }
-      });
-
-      if (!room) {
-        const response: RoomResponse = {
-          success: false,
-          message: "Room not found"
-        };
-        return NextResponse.json(response, { status: 404 });
-      }
-
       const response: RoomResponse = {
-        success: true,
-        room
+        success: false,
+        message: "Authentication required"
       };
-      return NextResponse.json(response);
+      return NextResponse.json(response, { status: 401 });
     }
 
     const rooms = await prisma.room.findMany({
