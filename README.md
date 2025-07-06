@@ -23,6 +23,7 @@ Create an `.env` and paste this and change the value to your database link .
 
 ```js
 DATABASE_URL="postgresql DB Url"
+GOOGLE_AI_API_KEY="from aistudio.google.com"
 ```
 
 Setup Database 

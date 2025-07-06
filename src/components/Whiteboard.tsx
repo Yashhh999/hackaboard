@@ -7,7 +7,8 @@ import { ThemeContext } from './SideNav'
 import { 
   Palette, Eraser, RotateCcw, Download, Minus, Plus, 
   Circle, Pipette, Move, Pen, Maximize2, Minimize2,
-  Undo, Redo, Settings, Save, Share2, X, LogOut
+  Undo, Redo, Settings, Save, Share2, X, LogOut, 
+  Brain, Sparkles, Zap, Eye
 } from 'lucide-react'
 
 interface DrawData {
@@ -60,6 +61,10 @@ export default function Whiteboard({ room }: WhiteboardProps) {
   })
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
   const { theme } = useContext(ThemeContext)
+  
+  const [isRecognizing, setIsRecognizing] = useState(false)
+  const [recognitionResult, setRecognitionResult] = useState<string | null>(null)
+  const [showRecognitionModal, setShowRecognitionModal] = useState(false)
 
   const addToRecentColors = (newColor: string) => {
     const updated = [newColor, ...recentColors.filter(c => c !== newColor)].slice(0, 8)
@@ -357,6 +362,42 @@ export default function Whiteboard({ room }: WhiteboardProps) {
     link.click()
   }
 
+  const recognizeDrawing = async () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    setIsRecognizing(true)
+    setRecognitionResult(null)
+
+    try {
+      const imageData = canvas.toDataURL('image/png')
+      
+      const response = await fetch('/api/ai-recognize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageData }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setRecognitionResult(data.recognition)
+        setShowRecognitionModal(true)
+      } else {
+        setRecognitionResult(`❌ **Error:** ${data.message}`)
+        setShowRecognitionModal(true)
+      }
+    } catch (error) {
+      console.error('Error recognizing drawing:', error)
+      setRecognitionResult('❌ **Error:** Failed to analyze drawing. Please try again.')
+      setShowRecognitionModal(true)
+    } finally {
+      setIsRecognizing(false)
+    }
+  }
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
   }
@@ -597,6 +638,25 @@ export default function Whiteboard({ room }: WhiteboardProps) {
             </button>
             
             <button
+              onClick={recognizeDrawing}
+              disabled={isRecognizing}
+              className={`p-2 rounded-xl transition-all duration-200 hover:scale-105 ${
+                isRecognizing 
+                  ? (theme === 'dark' ? 'bg-purple-800 text-purple-300' : 'bg-purple-200 text-purple-600')
+                  : (theme === 'dark' 
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                      : 'bg-purple-500 hover:bg-purple-600 text-white')
+              } shadow-lg relative`}
+              title="AI Recognition - What did I draw?"
+            >
+              {isRecognizing ? (
+                <Zap className="w-4 h-4 animate-pulse" />
+              ) : (
+                <Brain className="w-4 h-4" />
+              )}
+            </button>
+            
+            <button
               onClick={toggleFullscreen}
               className={`p-2 rounded-xl transition-all duration-200 hover:scale-105 ${
                 theme === 'dark' 
@@ -712,6 +772,22 @@ export default function Whiteboard({ room }: WhiteboardProps) {
                 >
                   <Download className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={recognizeDrawing}
+                  disabled={isRecognizing}
+                  className={`p-2 rounded-xl ${
+                    isRecognizing 
+                      ? 'bg-purple-800 text-purple-300' 
+                      : 'bg-purple-600 text-white'
+                  }`}
+                  title="AI Recognition"
+                >
+                  {isRecognizing ? (
+                    <Zap className="w-4 h-4 animate-pulse" />
+                  ) : (
+                    <Brain className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -773,6 +849,95 @@ export default function Whiteboard({ room }: WhiteboardProps) {
           </div>
         </div>
       </div>
+
+      {showRecognitionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`max-w-2xl w-full max-h-[80vh] overflow-y-auto rounded-2xl shadow-2xl ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border border-gray-700' 
+              : 'bg-white border border-gray-200'
+          }`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${
+                    theme === 'dark' ? 'bg-purple-900' : 'bg-purple-100'
+                  }`}>
+                    <Brain className={`w-5 h-5 ${
+                      theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                    }`} />
+                  </div>
+                  <h2 className={`text-xl font-bold ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    AI Drawing Recognition
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setShowRecognitionModal(false)}
+                  className={`p-2 rounded-full transition-colors ${
+                    theme === 'dark' 
+                      ? 'hover:bg-gray-700 text-gray-400' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className={`prose prose-sm max-w-none ${
+                theme === 'dark' ? 'prose-invert' : ''
+              }`}>
+                {recognitionResult ? (
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+                  }`}>
+                    <div className="whitespace-pre-wrap">
+                      {recognitionResult.split('\n').map((line, index) => (
+                        <div key={index} className="mb-2">
+                          {line.includes('**') ? (
+                            <div dangerouslySetInnerHTML={{
+                              __html: line
+                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                .replace(/🎨|✨|🤔|💡|❌/g, '<span class="text-lg">$&</span>')
+                            }} />
+                          ) : (
+                            <span>{line}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Sparkles className={`w-8 h-8 mx-auto mb-4 animate-pulse ${
+                      theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                    }`} />
+                    <p className={`${
+                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                    }`}>
+                      AI is analyzing your drawing...
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowRecognitionModal(false)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    theme === 'dark' 
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                      : 'bg-purple-500 hover:bg-purple-600 text-white'
+                  }`}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
